@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", ui-sans-serif, system-ui, sans-serif,
+  --font-sans: "Inter", "Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-mono: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Noto Sans Myanmar", "Padauk", monospace;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Noto Sans Myanmar", "Padauk", monospace;
 }
 
 html,
@@ -122,10 +122,46 @@ body {
   outline: none;
 }
 
-/* Better Burmese text rendering */
+/* Enhanced Burmese text rendering */
 .burmese-text {
-  font-feature-settings: "liga" 1, "calt" 1;
+  font-feature-settings: "liga" 1, "calt" 1, "kern" 1, "clig" 1;
+  font-variant-ligatures: common-ligatures contextual discretionary-ligatures;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  unicode-bidi: normal;
+  direction: ltr;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+/* Improved Burmese character spacing */
+.burmese-text .char {
+  display: inline-block;
+  position: relative;
+  min-width: 0.1em;
+}
+
+/* Better Burmese word boundaries */
+.burmese-text .word-boundary {
+  margin-right: 0.3em;
+}
+
+/* Enhanced focus and selection for Burmese text */
+.burmese-text:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+/* Improved Burmese text selection */
+.burmese-text ::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: inherit;
+}
+
+.burmese-text ::-moz-selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: inherit;
 }

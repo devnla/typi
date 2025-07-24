@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="64" fill="#1a1a1a"/>
+  <rect x="32" y="32" width="448" height="448" rx="32" fill="#3b82f6"/>
+  <text x="256" y="320" font-family="system-ui, -apple-system, sans-serif" font-size="128" font-weight="bold" text-anchor="middle" fill="white">T</text>
+  <circle cx="256" cy="380" r="12" fill="#60a5fa"/>
+  <rect x="96" y="160" width="320" height="12" rx="6" fill="white" opacity="0.8"/>
+  <rect x="96" y="184" width="240" height="12" rx="6" fill="white" opacity="0.6"/>
+  <rect x="96" y="208" width="280" height="12" rx="6" fill="white" opacity="0.4"/>
+  <rect x="96" y="232" width="200" height="12" rx="6" fill="white" opacity="0.3"/>
+</svg>

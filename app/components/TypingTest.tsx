@@ -4,7 +4,7 @@ import { RotateCcw, Zap, Target, Clock, Timer, Volume2, VolumeX } from 'lucide-r
 
 interface TypingTestProps {
   text: string;
-  onComplete: (wpm: number, accuracy: number, time: number) => void;
+  onComplete: (wpm: number, accuracy: number, time: number, errors: number) => void;
 }
 
 type TestMode = 'normal' | 'timer';
@@ -74,6 +74,9 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
     }
   }, [soundEnabled]);
 
+  const [finalWpm, setFinalWpm] = useState(0);
+  const [finalAccuracy, setFinalAccuracy] = useState(100);
+
   const completeTest = useCallback((finalInput: string, finalErrors: number) => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -81,22 +84,39 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
     }
     
     const endTime = Date.now();
-    const timeInMinutes = testMode === 'timer' 
-      ? (timerDuration - timeLeft) / 60
-      : (endTime - (startTime || endTime)) / 60000;
-    const wordsTyped = finalInput.trim().split(/\s+/).length;
-    const wpm = Math.round(wordsTyped / timeInMinutes) || 0;
+    
+    // Calculate elapsed time in seconds
+    let timeInSeconds: number;
+    if (testMode === 'timer') {
+      // For timer mode, calculate actual elapsed time from start
+      timeInSeconds = startTime ? Math.max((endTime - startTime) / 1000, 0.1) : timerDuration;
+    } else {
+      // For normal mode, calculate time from start to end
+      timeInSeconds = Math.max((endTime - (startTime || endTime)) / 1000, 0.1);
+    }
+    
+    // Convert to minutes for WPM calculation
+    const timeInMinutes = timeInSeconds / 60;
+    
+    // Calculate WPM using standard formula: (characters typed / 5) / time in minutes
+    // This is the industry standard for typing tests
+    const charactersTyped = finalInput.length;
+    const wpm = timeInMinutes > 0 ? Math.round((charactersTyped / 5) / timeInMinutes) : 0;
+    
+    // Calculate accuracy based on correct characters vs total characters typed
+    const correctChars = finalInput.length - finalErrors;
     const accuracy = finalInput.length > 0 
-      ? Math.round(((finalInput.length - finalErrors) / finalInput.length) * 100)
+      ? Math.round((correctChars / finalInput.length) * 100)
       : 100;
+    
+    // Store final values for display in completion modal
+    setFinalWpm(wpm);
+    setFinalAccuracy(accuracy);
     
     setIsComplete(true);
     playSound('complete');
-    const testTime = testMode === 'timer' 
-      ? timerDuration - timeLeft
-      : Math.round((endTime - (startTime || endTime)) / 1000);
-    onComplete(wpm, accuracy, testTime);
-  }, [testMode, timerDuration, timeLeft, startTime, onComplete, playSound]);
+    onComplete(wpm, accuracy, timeInSeconds, finalErrors);
+  }, [testMode, timerDuration, startTime, onComplete, playSound]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -147,8 +167,8 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
       }
     }, 0);
 
-    // Check if test is complete (only in normal mode) - use setTimeout to avoid state update during render
-    if (testMode === 'normal' && value.length === text.length) {
+    // Check if test is complete - use setTimeout to avoid state update during render
+    if (value.length === text.length) {
       setTimeout(() => completeTest(value, errorCount), 0);
     }
   }, [text, startTime, testMode, userInput.length, playSound, completeTest]);
@@ -159,13 +179,23 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          setTimeout(() => completeTest(userInput, errors), 0);
+          // Get current values from state instead of closure
+          setTimeout(() => {
+            const currentInput = inputRef.current?.value || '';
+            let currentErrors = 0;
+            for (let i = 0; i < currentInput.length; i++) {
+              if (currentInput[i] !== text[i]) {
+                currentErrors++;
+              }
+            }
+            completeTest(currentInput, currentErrors);
+          }, 0);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-  }, [completeTest, userInput, errors]);
+  }, [completeTest, text]);
 
 
 
@@ -180,11 +210,14 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
     setIsComplete(false);
     setErrors(0);
     setTimeLeft(timerDuration);
+    setFinalWpm(0);
+    setFinalAccuracy(100);
     inputRef.current?.focus();
   }, [timerDuration]);
 
   const switchTestMode = useCallback((mode: TestMode) => {
     setTestMode(mode);
+    localStorage.setItem('typi-test-mode', mode);
     if (mode === 'timer') {
       setTimeLeft(timerDuration);
     }
@@ -194,14 +227,42 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
   const changeDuration = useCallback((duration: TimerDuration) => {
     setTimerDuration(duration);
     setTimeLeft(duration);
-    resetTest();
-  }, [resetTest]);
+    localStorage.setItem('typi-timer-duration', duration.toString());
+    
+    // Reset test state directly to avoid stale closure issues
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setUserInput('');
+    setCurrentIndex(0);
+    setStartTime(null);
+    setIsComplete(false);
+    setErrors(0);
+    setFinalWpm(0);
+    setFinalAccuracy(100);
+    inputRef.current?.focus();
+  }, []);
 
-  // Load sound setting from localStorage
+  // Load settings from localStorage
   useEffect(() => {
     const savedSoundSetting = localStorage.getItem('typi-sound-enabled');
     if (savedSoundSetting !== null) {
       setSoundEnabled(JSON.parse(savedSoundSetting));
+    }
+    
+    const savedTestMode = localStorage.getItem('typi-test-mode');
+    if (savedTestMode && (savedTestMode === 'normal' || savedTestMode === 'timer')) {
+      setTestMode(savedTestMode as TestMode);
+    }
+    
+    const savedTimerDuration = localStorage.getItem('typi-timer-duration');
+    if (savedTimerDuration) {
+      const duration = parseInt(savedTimerDuration);
+      if ([15, 30, 60, 120].includes(duration)) {
+        setTimerDuration(duration as TimerDuration);
+        setTimeLeft(duration);
+      }
     }
   }, []);
 
@@ -281,7 +342,12 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
     );
   };
 
-  const currentWpm = startTime ? Math.round((userInput.split(' ').length / ((Date.now() - startTime) / 60000)) || 0) : 0;
+  const currentWpm = startTime && userInput.length > 0 ? (() => {
+    const timeElapsed = (Date.now() - startTime) / 60000; // time in minutes
+    if (timeElapsed < 0.01) return 0; // Prevent infinity for very short durations
+    const charactersTyped = userInput.length;
+    return Math.round((charactersTyped / 5) / timeElapsed) || 0;
+  })() : 0;
   const currentAccuracy = userInput.length > 0 ? Math.round(((userInput.length - errors) / userInput.length) * 100) : 100;
   const displayTime = testMode === 'timer' ? timeLeft : (startTime ? Math.round((Date.now() - startTime) / 1000) : 0);
 
@@ -330,7 +396,11 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
               {[15, 30, 60, 120].map((duration) => (
                 <button
                   key={duration}
-                  onClick={() => changeDuration(duration as TimerDuration)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    changeDuration(duration as TimerDuration);
+                  }}
                   className={`px-3 py-1 rounded text-sm transition-all duration-200 ${
                     timerDuration === duration
                       ? 'bg-blue-500 text-white'
@@ -432,11 +502,11 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
             <h3 className="text-xl sm:text-2xl font-bold text-green-800 dark:text-green-300 mb-4 sm:mb-6 text-center animate-in fade-in duration-700 delay-200">{t('test.complete.title')}</h3>
             <div className="grid grid-cols-2 gap-4 sm:gap-6">
               <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-left duration-500 delay-300">
-                <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 font-mono">{currentWpm}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 font-mono">{finalWpm}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide mt-1">{t('test.wpm')}</div>
               </div>
               <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-right duration-500 delay-400">
-                <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 font-mono">{currentAccuracy}%</div>
+                <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 font-mono">{finalAccuracy}%</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide mt-1">{t('test.accuracy')}</div>
               </div>
             </div>

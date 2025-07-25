@@ -54,15 +54,21 @@ function HomeContent() {
     setCurrentText(getTextById(selectedTextType));
   }, [selectedTextType]);
 
-  const handleTestComplete = (wpm: number, accuracy: number, time: number) => {
+  const handleTestComplete = (wpm: number, accuracy: number, time: number, errors: number) => {
+    // Ensure WPM and accuracy are valid numbers
+    const validWpm = isFinite(wpm) && wpm >= 0 ? Math.round(wpm) : 0;
+    const validAccuracy = isFinite(accuracy) && accuracy >= 0 && accuracy <= 100 ? Math.round(accuracy) : 0;
+    const validTime = isFinite(time) && time > 0 ? time : 1;
+    const validErrors = isFinite(errors) && errors >= 0 ? errors : 0;
+    
     const newResult: TestResult = {
       id: Date.now().toString(),
-      wpm,
-      accuracy,
-      time,
+      wpm: validWpm,
+      accuracy: validAccuracy,
+      time: validTime,
       textType: textOptions.find(opt => opt.id === selectedTextType)?.name || 'Unknown',
       date: new Date().toISOString(),
-      errors: Math.round((currentText.length * (100 - accuracy)) / 100)
+      errors: validErrors
     };
 
     const updatedResults = [newResult, ...results];

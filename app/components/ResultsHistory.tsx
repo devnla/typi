@@ -18,70 +18,117 @@ interface ProgressChartProps {
 }
 
 function ProgressChart({ results }: ProgressChartProps) {
-  const chartData = results.slice(-15).map((result, index) => ({
-    test: index + 1,
-    wpm: result.wpm,
-    accuracy: Math.round(result.accuracy * 10) / 10, // Round to 1 decimal
-    date: new Date(result.date).toLocaleDateString()
-  }));
+  const { t } = useLanguage();
+  
+  // Get last 20 results for better trend visualization
+  const chartData = results.slice(-20).map((result, index) => {
+    const date = new Date(result.date);
+    return {
+      test: index + 1,
+      wpm: result.wpm,
+      accuracy: Math.round(result.accuracy * 10) / 10,
+      date: date.toLocaleDateString(),
+      time: `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      textType: result.textType,
+      errors: result.errors,
+      testTime: result.time
+    };
+  });
+
+  // Calculate WPM trend (last 5 vs previous 5)
+  const recentTests = chartData.slice(-5);
+  const previousTests = chartData.slice(-10, -5);
+  
+  const recentAvgWpm = recentTests.reduce((sum, test) => sum + test.wpm, 0) / recentTests.length;
+  const previousAvgWpm = previousTests.length > 0 
+    ? previousTests.reduce((sum, test) => sum + test.wpm, 0) / previousTests.length 
+    : recentAvgWpm;
+  
+  const wpmTrend = recentAvgWpm - previousAvgWpm;
 
   return (
-    <div className="w-full h-80">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-          <XAxis 
-            dataKey="test" 
-            tick={{ fontSize: 12 }}
-            className="fill-gray-600 dark:fill-gray-400"
-          />
-          <YAxis 
-            yAxisId="wpm"
-            orientation="left"
-            tick={{ fontSize: 12 }}
-            className="fill-gray-600 dark:fill-gray-400"
-            label={{ value: 'WPM', angle: -90, position: 'insideLeft' }}
-          />
-          <YAxis 
-            yAxisId="accuracy"
-            orientation="right"
-            domain={[0, 100]}
-            tick={{ fontSize: 12 }}
-            className="fill-gray-600 dark:fill-gray-400"
-            label={{ value: 'Accuracy (%)', angle: 90, position: 'insideRight' }}
-          />
-          <Tooltip 
-            contentStyle={{
-              backgroundColor: 'var(--tooltip-bg, #ffffff)',
-              border: '1px solid var(--tooltip-border, #e5e7eb)',
-              borderRadius: '8px',
-              fontSize: '14px'
-            }}
-            labelStyle={{ color: 'var(--tooltip-text, #374151)' }}
-          />
-          <Legend />
-          <Line 
-            yAxisId="wpm"
-            type="monotone" 
-            dataKey="wpm" 
-            stroke="#3b82f6" 
-            strokeWidth={2}
-            dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
-            name="WPM"
-          />
-          <Line 
-            yAxisId="accuracy"
-            type="monotone" 
-            dataKey="accuracy" 
-            stroke="#10b981" 
-            strokeWidth={2}
-            dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
-            name="Accuracy (%)"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="w-full">
+
+      
+      <div className="w-full h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+            <XAxis 
+              dataKey="test" 
+              tick={{ fontSize: 12 }}
+              className="fill-gray-600 dark:fill-gray-400"
+              label={{ value: 'Test Number', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fontSize: '12px' } }}
+            />
+            <YAxis 
+              tick={{ fontSize: 12 }}
+              className="fill-blue-600 dark:fill-blue-400"
+              label={{ value: 'Words Per Minute', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
+              domain={['dataMin - 5', 'dataMax + 10']}
+            />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'var(--tooltip-bg, #ffffff)',
+                border: '1px solid var(--tooltip-border, #e5e7eb)',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                fontSize: '13px'
+              }}
+              labelStyle={{ color: 'var(--tooltip-text, #374151)', fontWeight: 'bold' }}
+              formatter={(value, name) => [`${value} WPM`, 'Typing Speed']}
+              labelFormatter={(label, payload) => {
+                if (payload && payload[0]) {
+                  const data = payload[0].payload;
+                  return `Test #${label} - ${data.time}`;
+                }
+                return `Test #${label}`;
+              }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="wpm" 
+              stroke="#3b82f6" 
+              strokeWidth={4}
+              dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6 }}
+              activeDot={{ r: 8, stroke: '#3b82f6', strokeWidth: 3, fill: '#ffffff' }}
+              name="WPM"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      
+      {/* WPM Progress Insights */}
+      {chartData.length >= 5 && (
+        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">WPM Progress</h4>
+          <div className="flex items-center gap-2 text-sm mb-3">
+            <span className={`text-lg ${wpmTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {wpmTrend >= 0 ? '📈' : '📉'}
+            </span>
+            <span className="text-gray-700 dark:text-gray-300">
+              Your typing speed has {wpmTrend >= 0 ? 'improved' : 'decreased'} by {Math.abs(wpmTrend).toFixed(1)} WPM on average
+            </span>
+          </div>
+          
+          {/* Dynamic insights */}
+          <div className="text-xs text-blue-700 dark:text-blue-300">
+            {(() => {
+              const avgWpm = chartData.reduce((sum, d) => sum + d.wpm, 0) / chartData.length;
+              const latestWpm = chartData[chartData.length - 1]?.wpm || 0;
+              
+              if (latestWpm >= 70) {
+                return "🏆 Outstanding! You're typing at an expert level.";
+              } else if (latestWpm >= 50) {
+                return "👍 Great speed! You're above average for most typists.";
+              } else if (latestWpm >= 30) {
+                return "📈 Good progress! Keep practicing to reach higher speeds.";
+              } else {
+                return "💪 Focus on consistent practice to build your typing speed.";
+              }
+            })()} 
+          </div>
+        </div>
+      )}
     </div>
   );
 }

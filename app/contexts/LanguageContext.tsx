@@ -22,7 +22,8 @@ const translations = {
       language: 'Language',
       theme: {
         light: 'Light Mode',
-        dark: 'Dark Mode'
+        dark: 'Dark Mode',
+        system: 'System Theme'
       }
     },
     test: {
@@ -105,7 +106,8 @@ const translations = {
       language: 'ဘာသာစကား',
       theme: {
         light: 'အလင်းရောင်',
-        dark: 'အမှောင်ရောင်'
+        dark: 'အမှောင်ရောင်',
+        system: 'စနစ်အလိုက်'
       }
     },
     test: {

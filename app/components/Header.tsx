@@ -1,6 +1,6 @@
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Moon, Sun, Globe, Keyboard } from 'lucide-react';
+import { Moon, Sun, Monitor, Globe, Keyboard } from 'lucide-react';
 
 interface HeaderProps {
   currentView: 'test' | 'results';
@@ -9,11 +9,23 @@ interface HeaderProps {
 }
 
 export function Header({ currentView, setCurrentView, resultsCount }: HeaderProps) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, resolvedTheme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
 
+  const getThemeIcon = () => {
+    if (theme === 'system') return <Monitor className="w-5 h-5 text-gray-600 dark:text-gray-300" />;
+    if (theme === 'light') return <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" />;
+    return <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />;
+  };
+
+  const getThemeTooltip = () => {
+    if (theme === 'system') return t('settings.theme.system');
+    if (theme === 'light') return t('settings.theme.dark');
+    return t('settings.theme.light');
+  };
+
   return (
-    <header className="w-full border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
+    <header className="w-full border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -80,13 +92,9 @@ export function Header({ currentView, setCurrentView, resultsCount }: HeaderProp
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
-              title={theme === 'light' ? t('settings.theme.dark') : t('settings.theme.light')}
+              title={getThemeTooltip()}
             >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              ) : (
-                <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              )}
+              {getThemeIcon()}
             </button>
           </div>
         </div>

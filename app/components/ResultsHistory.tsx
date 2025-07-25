@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Trash2, TrendingUp, Calendar, Type } from 'lucide-react';
+import { Trash2, TrendingUp, Calendar, Type, BarChart3 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export interface TestResult {
   id: string;
@@ -10,6 +11,79 @@ export interface TestResult {
   textType: string;
   date: string;
   errors: number;
+}
+
+interface ProgressChartProps {
+  results: TestResult[];
+}
+
+function ProgressChart({ results }: ProgressChartProps) {
+  const chartData = results.slice(-15).map((result, index) => ({
+    test: index + 1,
+    wpm: result.wpm,
+    accuracy: Math.round(result.accuracy * 10) / 10, // Round to 1 decimal
+    date: new Date(result.date).toLocaleDateString()
+  }));
+
+  return (
+    <div className="w-full h-80">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+          <XAxis 
+            dataKey="test" 
+            tick={{ fontSize: 12 }}
+            className="fill-gray-600 dark:fill-gray-400"
+          />
+          <YAxis 
+            yAxisId="wpm"
+            orientation="left"
+            tick={{ fontSize: 12 }}
+            className="fill-gray-600 dark:fill-gray-400"
+            label={{ value: 'WPM', angle: -90, position: 'insideLeft' }}
+          />
+          <YAxis 
+            yAxisId="accuracy"
+            orientation="right"
+            domain={[0, 100]}
+            tick={{ fontSize: 12 }}
+            className="fill-gray-600 dark:fill-gray-400"
+            label={{ value: 'Accuracy (%)', angle: 90, position: 'insideRight' }}
+          />
+          <Tooltip 
+            contentStyle={{
+              backgroundColor: 'var(--tooltip-bg, #ffffff)',
+              border: '1px solid var(--tooltip-border, #e5e7eb)',
+              borderRadius: '8px',
+              fontSize: '14px'
+            }}
+            labelStyle={{ color: 'var(--tooltip-text, #374151)' }}
+          />
+          <Legend />
+          <Line 
+            yAxisId="wpm"
+            type="monotone" 
+            dataKey="wpm" 
+            stroke="#3b82f6" 
+            strokeWidth={2}
+            dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+            activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+            name="WPM"
+          />
+          <Line 
+            yAxisId="accuracy"
+            type="monotone" 
+            dataKey="accuracy" 
+            stroke="#10b981" 
+            strokeWidth={2}
+            dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+            activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
+            name="Accuracy (%)"
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
 
 interface ResultsHistoryProps {
@@ -256,13 +330,22 @@ export function ResultsHistory({ results, onClearResults }: ResultsHistoryProps)
         </div>
       </div>
 
-      {/* Progress Chart Placeholder */}
-      <div className="mt-8 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">{t('results.progressOverTime')}</h3>
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          📈 {t('results.chartVisualization')}<br/>
-          <span className="text-sm">({t('results.chartDescription')})</span>
+      {/* Progress Chart */}
+      <div className="mt-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <BarChart3 className="text-blue-500" size={20} />
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{t('results.progressOverTime')}</h3>
         </div>
+        
+        {results.length >= 2 ? (
+          <ProgressChart results={sortedResults} />
+        ) : (
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-50" />
+            <p className="text-lg mb-2">{t('results.chartVisualization')}</p>
+            <p className="text-sm">Complete at least 2 tests to see your progress chart</p>
+          </div>
+        )}
       </div>
     </div>
   );

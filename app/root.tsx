@@ -50,6 +50,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="msapplication-TileColor" content="#3b82f6" />
         <meta name="msapplication-tap-highlight" content="no" />
         
+        {/* Edge Side Panel Support */}
+        <meta name="msapplication-allowDomainApiCalls" content="true" />
+        <meta name="msapplication-allowDomainMetaTags" content="true" />
+        
+        {/* iOS Splash Screen */}
+        <meta name="apple-touch-fullscreen" content="yes" />
+        <link rel="apple-touch-startup-image" href="/icon-512.svg" />
+        
+        {/* Security */}
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
+        
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
         

@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://typi.devnla.com/sitemap.xml
+
+# PWA files
+Allow: /manifest.json
+Allow: /sw.js
+Allow: /icon-*.svg
+Allow: /favicon.ico
+Allow: /browserconfig.xml
+
+# Cache and service worker
+Disallow: /sw.js.map
+Disallow: /_worker.js
+Disallow: /build/

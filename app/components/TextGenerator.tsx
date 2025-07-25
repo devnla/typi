@@ -41,70 +41,65 @@ const quotes = [
   "First, solve the problem. Then, write the code. Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
 ];
 
+const longTexts = [
+  "Technology has revolutionized the way we live, work, and communicate. From the invention of the wheel to the development of artificial intelligence, human innovation has consistently pushed the boundaries of what is possible. In today's digital age, we are witnessing unprecedented changes in how information is processed, shared, and utilized. The internet has connected billions of people across the globe, creating a vast network of knowledge and collaboration. Social media platforms have transformed how we interact with friends, family, and strangers, while e-commerce has revolutionized the way we shop and conduct business. Mobile devices have put powerful computing capabilities in our pockets, allowing us to access information, communicate, and work from virtually anywhere. As we continue to advance technologically, we must also consider the ethical implications of our innovations and ensure that progress benefits all of humanity.",
+  "The art of writing has evolved significantly throughout human history. From ancient cave paintings to modern digital communication, the written word has served as a fundamental tool for preserving knowledge, expressing ideas, and connecting people across time and space. In the early days, writing was primarily used for record-keeping and religious purposes. As civilizations developed, literature emerged as a powerful form of artistic expression, giving birth to epic poems, philosophical treatises, and dramatic works that continue to influence us today. The invention of the printing press democratized access to written materials, leading to increased literacy rates and the spread of ideas. In the modern era, digital technology has once again transformed writing, making it easier than ever to create, edit, and share written content. Despite these technological advances, the fundamental principles of good writing remain unchanged: clarity, coherence, and the ability to engage and inform readers.",
+  "Climate change represents one of the most pressing challenges of our time. Scientific evidence overwhelmingly demonstrates that human activities, particularly the burning of fossil fuels, have led to a significant increase in greenhouse gas concentrations in the atmosphere. This has resulted in rising global temperatures, melting ice caps, rising sea levels, and increasingly frequent extreme weather events. The impacts of climate change are already being felt around the world, affecting ecosystems, agriculture, water resources, and human health. Addressing this challenge requires unprecedented global cooperation and immediate action. Governments, businesses, and individuals must work together to reduce greenhouse gas emissions, transition to renewable energy sources, and implement sustainable practices. While the task ahead is daunting, there is still time to limit the worst effects of climate change if we act decisively and collectively. The future of our planet depends on the choices we make today."
+];
+
 const burmeseWords = [
-  // Basic words
-  'မြန်မာ', 'နိုင်ငံ', 'လူမျိုး', 'ဘာသာ', 'စကား', 'ယဉ်ကျေး', 'မှု', 'ရိုးရာ', 'ဓလေ့', 'ထုံးတမ်း',
-  'ပညာ', 'ရေး', 'သင်', 'ကြား', 'မှု', 'ကျောင်း', 'ဆရာ', 'ကျောင်းသား', 'စာ', 'အုပ်',
+  // Basic everyday words (simple and readable)
+  'မြန်မာ', 'နိုင်ငံ', 'လူ', 'သား', 'သမီး', 'အိမ်', 'ရေ', 'စား', 'သောက်', 'အိပ်',
+  'နေ', 'လ', 'ကြယ်', 'နံနက်', 'ညနေ', 'ည', 'နေ့', 'ရက်', 'လ', 'နှစ်', 'အချိန်', 'မိနစ်',
   
-  // Technology
-  'ကွန်ပျူတာ', 'နည်းပညာ', 'အင်တာနက်', 'ဝက်ဘ်ဆိုဒ်', 'အပ်ပလီကေးရှင်း', 'ပရိုဂရမ်', 'ကုဒ်', 'ဒေတာ', 'ဖိုင်', 'စနစ်',
-  'ဆော့ဖ်ဝဲ', 'ဟာ့ဒ်ဝဲ', 'နက်ဝေါ့ခ်', 'ဒေတာဘေ့စ်', 'ဆာဗာ', 'ကလောက်', 'လုံခြုံရေး', 'ပတ်စ်ဝေါ့ဒ်',
+  // Simple technology words
+  'ဖုန်း', 'ကွန်ပျူတာ', 'ရေဒီယို', 'တီဗီ', 'ကင်မရာ', 'ဓာတ်ပုံ', 'ဗီဒီယို', 'သီချင်း', 'ရုပ်ရှင်', 'စာ',
   
-  // Family
-  'အိမ်', 'မိသားစု', 'မိဘ', 'သား', 'သမီး', 'ညီ', 'အစ်ကို', 'နှမ', 'အစ်မ', 'အဖွား', 'အဖေး', 'ဦးလေး', 'ဒေါ်လေး',
+  // Family words
+  'အဖေ', 'အမေ', 'သား', 'သမီး', 'ညီ', 'အစ်ကို', 'နှမ', 'အစ်မ', 'အဘိုး', 'အဘွား', 'ကလေး', 'မြေး',
   
-  // Food
-  'အစားအသောက်', 'ထမင်း', 'ဟင်း', 'ငါး', 'အသား', 'ဟင်းသီး', 'ဟင်းရွက်', 'သစ်သီး', 'ရေ', 'လက်ဖက်ရည်',
-  'မုန့်', 'ခေါက်ဆွဲ', 'မုန့်ဟင်းခါး', 'ကြက်သွန်', 'ချက်သွန်', 'ငရုတ်သီး', 'ဆား', 'ကြက်ဥ', 'နို့', 'ပန်းကန်',
+  // Food words
+  'ထမင်း', 'ဟင်း', 'ငါး', 'အသား', 'ရေ', 'နို့', 'မုန့်', 'သစ်သီး', 'ကြက်', 'ကြက်ဥ', 'ဆား', 'ချိုး',
   
-  // Work
-  'အလုပ်', 'လုပ်ငန်း', 'ရုံး', 'ကုမ္ပဏီ', 'ဝန်ထမ်း', 'မန်နေဂျာ', 'စီမံ', 'ခန့်ခွဲ', 'မှု', 'စီမံကိန်း',
-  'ရောင်းချ', 'ဝယ်ယူ', 'ကုန်သွယ', 'ငွေကြေး', 'ဘဏ်', 'ရင်းနှီး', 'မြှုပ်နှံ', 'အမြတ်', 'အရှုံး',
+  // Work words
+  'အလုပ်', 'ရုံး', 'ဝန်ထမ်း', 'လုပ်', 'ရောင်း', 'ဝယ်', 'ပိုက်ဆံ', 'လစာ', 'အချိန်', 'နေ့', 'ညနေ',
   
-  // Health
-  'ကျန်းမာ', 'ရေး', 'ဆေးရုံ', 'ဆရာဝန်', 'သူနာပြု', 'ဆေး', 'ဝါး', 'ကုသ', 'မှု', 'စစ်ဆေး',
-  'ရောဂါ', 'ကာကွယ', 'ဆေးထိုး', 'ကုသမှု', 'ခွဲစိတ်', 'ဆေးခန်း', 'လူနာ', 'ကျန်းမာရေး',
+  // Health words
+  'ကျန်းမာ', 'ဆေးရုံ', 'ဆရာဝန်', 'ဆေး', 'နာ', 'ကိုယ်', 'ခေါင်း', 'လက်', 'ခြေ', 'မျက်လုံး', 'နား',
   
-  // Travel
-  'ခရီး', 'သွား', 'လာ', 'မှု', 'လေယာဉ်', 'ရထား', 'ကား', 'လမ်း', 'တံတား', 'ဘူတာ',
-  'လေဆိပ်', 'ရထားဘူတာ', 'ကားဂိတ်', 'လက်မှတ်', 'ခရီးသည်', 'ဟိုတယ်', 'တည်းခို', 'ခရီးစဉ်',
+  // Travel words
+  'ခရီး', 'သွား', 'လာ', 'ကား', 'ရထား', 'လေယာဉ်', 'လမ်း', 'ဟိုတယ်', 'အိမ်', 'နေ', 'ရောက်',
   
-  // Weather & Time
-  'ရာသီ', 'ဥတု', 'နွေ', 'ရာသီ', 'မိုး', 'ရာသီ', 'ဆောင်း', 'ရာသီ', 'လေ', 'မုန်တိုင်း',
-  'နေ', 'လ', 'ကြယ်', 'မိုးတိမ်', 'နေရောင်', 'အပူ', 'အေး', 'ပူ', 'ချမ်း', 'နွေး',
-  'အပတ်စဉ်', 'နေ့', 'တနင်္လာ', 'အင်္ဂါ', 'ဗုဒ္ဓဟူး', 'ကြာသပတေး', 'သောကြာ', 'စနေ', 'တနင်္ဂနွေ', 'ရက်',
+  // Weather & Time words
+  'နေ', 'မိုး', 'လေ', 'နေ့', 'ည', 'နံနက်', 'ညနေ', 'အချိန်', 'နာရီ', 'မိနစ်', 'ရက်', 'လ', 'နှစ်',
   
-  // Colors & Nature
-  'အရောင်', 'နီ', 'ပြာ', 'အစိမ်း', 'ဝါ', 'ခရမ်း', 'လိမ္မော်', 'ဖြူ', 'မည်း', 'ပန်းရောင်',
-  'သစ်ပင်', 'ပန်း', 'ရွက်', 'အမြစ်', 'အကိုင်း', 'သစ်သီး', 'ပန်းခြံ', 'တောင်', 'မြစ်', 'ပင်လယ်',
+  // Colors & Nature words
+  'နီ', 'ပြာ', 'အစိမ်း', 'ဝါ', 'ဖြူ', 'မည်း', 'သစ်ပင်', 'ပန်း', 'ရွက်', 'တောင်', 'မြစ်', 'ပင်လယ်',
+  
+  // Education words
+  'ကျောင်း', 'ဆရာ', 'ကျောင်းသား', 'စာ', 'စာအုပ်', 'ဖတ်', 'ရေး', 'သင်', 'လေ့လာ', 'စာမေးပွဲ',
   
   // Common verbs
-  'လုပ်', 'သွား', 'လာ', 'ရောက်', 'ပြန်', 'ထွက်', 'ဝင်', 'ထိုင်', 'ရပ်', 'လျှောက်',
-  'ပြေး', 'ခုန်', 'ကြည့်', 'ကြား', 'ပြော', 'ပြ', 'ပေး', 'ယူ', 'ရ', 'ရှိ'
+  'လုပ်', 'သွား', 'လာ', 'နေ', 'စား', 'သောက်', 'အိပ်', 'ထ', 'ကြည့်', 'နား', 'ပြော', 'ပေး', 'ယူ', 'ရ',
+  
+  // Emotions words
+  'ပျော်', 'ဝမ်းသာ', 'ကျေနပ်', 'ဝမ်းနည်း', 'ကြောက်', 'ဒေါသ', 'ချစ်', 'မုန်း', 'ပင်ပန်း', 'အားရ'
 ];
 
 const burmeseQuotes = [
-  'ပညာသည် အလင်းရောင်ဖြစ်၍ အမှောင်ကို ပယ်ရှားပေးသည်။',
-  'ကြိုးစားအားထုတ်မှုသည် အောင်မြင်မှု၏ သော့ချက်ဖြစ်သည်။',
-  'ရိုးသားမှုနှင့် လေးစားမှုသည် ကောင်းမွန်သော ဆက်ဆံရေး၏ အခြေခံဖြစ်သည်။',
-  'အချိန်သည် အဖိုးအတန်ဆုံး ပစ္စည်းဖြစ်သည်။ ထို့ကြောင့် အချိန်ကို အကျိုးရှိရှိ အသုံးပြုပါ။',
-  'ကိုယ့်ကိုယ်ကို ယုံကြည်မှုသည် အောင်မြင်မှု၏ ပထမဆုံး ခြေလှမ်းဖြစ်သည်။',
-  'အမှားများမှ သင်ခန်းစာ ယူတတ်သူသည် ပညာရှိဖြစ်သည်။',
-  'စိတ်ရှည်သည်းခံမှုသည် အကြီးမားဆုံး သီလဖြစ်သည်။',
-  'မေတ္တာနှင့် ကရုဏာသည် လူ့ဘဝ၏ အလှဆုံး အရည်အချင်းများဖြစ်သည်။',
-  'ချစ်ခြင်းမေတ္တာသည် ကမ္ဘာကို ပြောင်းလဲစေနိုင်သည်။',
-  'သစ္စာရှိမှုသည် လူ့ဘဝ၏ အခြေခံအုတ်မြစ်ဖြစ်သည်။',
-  'ရိုးသားမှုသည် အကောင်းဆုံး မူဝါဒဖြစ်သည်။',
-  'အချိန်သည် အဖိုးအတန်ဆုံး ဘဏ္ဍာဖြစ်သည်။',
-  'စိတ်ရှည်မှုသည် အောင်မြင်မှု၏ လမ်းကြောင်းဖြစ်သည်။',
-  'ကျေးဇူးတင်ခြင်းသည် ပျော်ရွှင်မှု၏ အရင်းအမြစ်ဖြစ်သည်။',
-  'လေ့လာမှုသည် တိုးတက်မှု၏ အခြေခံဖြစ်သည်။',
-  'မေတ္တာသည် ကမ္ဘာ့အင်အားအကြီးဆုံးဖြစ်သည်။',
-  'ယုံကြည်မှုသည် အမြင့်ဆုံး တောင်ကိုပင် ရွေ့နိုင်သည်။',
-  'ဝေမျှခြင်းသည် ပိုမိုရရှိခြင်း၏ လမ်းကြောင်းဖြစ်သည်။',
-  'အမှားများမှ သင်ခန်းစာယူခြင်းသည် ပညာရှိမှု၏ အစဖြစ်သည်။',
-  'ရည်မှန်းချက်ရှိခြင်းသည် အောင်မြင်မှု၏ ပထမခြေလှမ်းဖြစ်သည်။',
-  'စိတ်ဓာတ်ခိုင်မာမှုသည် ခက်ခဲမှုများကို ကျော်လွှားနိုင်စေသည်။'
+  // Simple wisdom
+  'ပညာသည် အင်အား',
+  'လုပ်ငန်းမှန် အချိန်နှင့်အညီ',
+  'ကြိုးစားမှု အောင်မြင်မှု',
+  'ယနေ့ကို ကောင်းအောင် လုပ်ပါ',
+  'အမှားမှ သင်ခန်းစာ ယူပါ',
+  
+  // Life quotes
+  'ကြင်နာမှုသည် အင်အား',
+  'စိတ်ရှည်မှုသည် ပညာ',
+  'မေတ္တာသည် အင်အား',
+  'မိတ်ဆွေကောင်းသည် ရတနာ',
+  'မိသားစုသည် အရေးကြီး'
 ];
 
 export const textOptions: TextOption[] = [
@@ -195,6 +190,14 @@ export const textOptions: TextOption[] = [
     description: 'Inspirational Burmese quotes',
     getText: () => {
       return burmeseQuotes[Math.floor(Math.random() * burmeseQuotes.length)];
+    }
+  },
+  {
+    id: 'long-text',
+    name: 'Long Text',
+    description: 'Extended passages for endurance practice',
+    getText: () => {
+      return longTexts[Math.floor(Math.random() * longTexts.length)];
     }
   }
 ];

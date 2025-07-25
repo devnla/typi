@@ -23,6 +23,27 @@ body {
   75% { transform: translateX(2px); }
 }
 
+@keyframes blink {
+  0%, 45% { opacity: 0.8; }
+  50%, 55% { opacity: 0.1; }
+  100% { opacity: 0.8; }
+}
+
+@keyframes cursor-blink {
+  0%, 45% { 
+    background-color: rgba(59, 130, 246, 0.6);
+    opacity: 0.8;
+  }
+  50%, 55% { 
+    background-color: rgba(59, 130, 246, 0.1);
+    opacity: 0.1;
+  }
+  100% { 
+    background-color: rgba(59, 130, 246, 0.6);
+    opacity: 0.8;
+  }
+}
+
 @keyframes slide-in-from-bottom-4 {
   from {
     transform: translateY(1rem);
@@ -164,4 +185,133 @@ body {
 .burmese-text ::-moz-selection {
   background: rgba(59, 130, 246, 0.3);
   color: inherit;
+}
+
+/* Blinking cursor animation */
+.cursor-blink {
+  animation: cursor-blink 2s ease-in-out infinite;
+}
+
+.cursor-blink::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -2px;
+  width: 2px;
+  height: 100%;
+  background-color: rgba(59, 130, 246, 0.6);
+  animation: blink 2s ease-in-out infinite;
+  border-radius: 1px;
+}
+
+/* Typing cursor with background highlight */
+.typing-cursor {
+  position: relative;
+  background-color: rgba(59, 130, 246, 0.08);
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.typing-cursor::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -1px;
+  width: 2px;
+  height: 100%;
+  background-color: rgba(59, 130, 246, 0.6);
+  animation: blink 2s ease-in-out infinite;
+  border-radius: 1px;
+}
+
+/* Enhanced scrolling for typing test */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Text container with better overflow handling */
+.typing-text-container {
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  padding: 2rem 1rem;
+  position: relative;
+}
+
+/* Fade effect for text overflow */
+.typing-text-container::before {
+  content: '';
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to bottom, 
+    rgba(255, 255, 255, 1) 0%, 
+    rgba(255, 255, 255, 0) 100%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.dark .typing-text-container::before {
+  background: linear-gradient(to bottom, 
+    rgba(3, 7, 18, 1) 0%, 
+    rgba(3, 7, 18, 0) 100%);
+}
+
+.typing-text-container::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to top, 
+    rgba(255, 255, 255, 1) 0%, 
+    rgba(255, 255, 255, 0) 100%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.dark .typing-text-container::after {
+  background: linear-gradient(to top, 
+    rgba(3, 7, 18, 1) 0%, 
+    rgba(3, 7, 18, 0) 100%);
+}
+
+/* Improved character transitions */
+.char {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced scrollbar for typing container */
+.typing-text-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.typing-text-container::-webkit-scrollbar-track {
+  background: rgba(156, 163, 175, 0.1);
+  border-radius: 3px;
+}
+
+.typing-text-container::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.typing-text-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Focus indicator for current typing position */
+.current-line {
+  background: linear-gradient(90deg, 
+    rgba(59, 130, 246, 0.05) 0%, 
+    rgba(59, 130, 246, 0.1) 50%, 
+    rgba(59, 130, 246, 0.05) 100%);
+  border-radius: 4px;
+  padding: 0.25rem 0;
+  margin: -0.25rem 0;
 }

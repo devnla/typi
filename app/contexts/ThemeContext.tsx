@@ -19,16 +19,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const savedTheme = localStorage.getItem('typi-theme') as Theme;
       if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
         setThemeState(savedTheme);
+        // Apply theme immediately
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(savedTheme);
       } else {
         // Check system preference
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setThemeState(prefersDark ? 'dark' : 'light');
+        const defaultTheme = prefersDark ? 'dark' : 'light';
+        setThemeState(defaultTheme);
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(defaultTheme);
+        localStorage.setItem('typi-theme', defaultTheme);
       }
     } catch (error) {
       console.warn('Failed to load theme from localStorage:', error);
       // Fallback to system preference
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setThemeState(prefersDark ? 'dark' : 'light');
+      const fallbackTheme = prefersDark ? 'dark' : 'light';
+      setThemeState(fallbackTheme);
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(fallbackTheme);
     }
   }, []);
 

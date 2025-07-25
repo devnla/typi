@@ -20,7 +20,7 @@ interface ResultsHistoryProps {
 export function ResultsHistory({ results, onClearResults }: ResultsHistoryProps) {
   const [sortBy, setSortBy] = useState<'date' | 'wpm' | 'accuracy'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const sortedResults = [...results].sort((a, b) => {
     let aValue: number | string;
@@ -70,8 +70,8 @@ export function ResultsHistory({ results, onClearResults }: ResultsHistoryProps)
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📊</div>
-          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('noResults')}</h3>
-          <p className="text-gray-500 dark:text-gray-400">{t('noResultsDescription')}</p>
+          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('results.noResults')}</h3>
+          <p className="text-gray-500 dark:text-gray-400">{t('results.noResultsDescription')}</p>
         </div>
       </div>
     );
@@ -82,14 +82,14 @@ export function ResultsHistory({ results, onClearResults }: ResultsHistoryProps)
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
           <TrendingUp className="text-blue-500" size={24} />
-          {t('typingTestResults')}
+          {t('results.title')}
         </h2>
         <button
           onClick={onClearResults}
           className="px-4 py-2 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white rounded-lg transition-colors duration-200 text-sm font-medium flex items-center gap-2"
         >
           <Trash2 size={16} />
-          {t('clearHistory')}
+          {t('results.clearHistory')}
         </button>
       </div>
 
@@ -97,19 +97,47 @@ export function ResultsHistory({ results, onClearResults }: ResultsHistoryProps)
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-center">
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{averageWpm}</div>
-          <div className="text-sm text-blue-800 dark:text-blue-300">{t('averageWpm')}</div>
+          <div 
+            className="text-sm text-blue-800 dark:text-blue-300"
+            style={{
+              fontFamily: language === 'my'
+                ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                : 'inherit'
+            }}
+          >{t('results.averageWpm')}</div>
         </div>
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 text-center">
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">{averageAccuracy}%</div>
-          <div className="text-sm text-green-800 dark:text-green-300">{t('averageAccuracy')}</div>
+          <div 
+            className="text-sm text-green-800 dark:text-green-300"
+            style={{
+              fontFamily: language === 'my'
+                ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                : 'inherit'
+            }}
+          >{t('results.averageAccuracy')}</div>
         </div>
         <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 text-center">
           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{bestWpm}</div>
-          <div className="text-sm text-purple-800 dark:text-purple-300">{t('bestWpm')}</div>
+          <div 
+            className="text-sm text-purple-800 dark:text-purple-300"
+            style={{
+              fontFamily: language === 'my'
+                ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                : 'inherit'
+            }}
+          >{t('results.bestWpm')}</div>
         </div>
         <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 text-center">
           <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{bestAccuracy}%</div>
-          <div className="text-sm text-orange-800 dark:text-orange-300">{t('bestAccuracy')}</div>
+          <div 
+            className="text-sm text-orange-800 dark:text-orange-300"
+            style={{
+              fontFamily: language === 'my'
+                ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                : 'inherit'
+            }}
+          >{t('results.bestAccuracy')}</div>
         </div>
       </div>
 
@@ -122,9 +150,14 @@ export function ResultsHistory({ results, onClearResults }: ResultsHistoryProps)
                 <th 
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-1"
                   onClick={() => handleSort('date')}
+                  style={{
+                    fontFamily: language === 'my'
+                      ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                      : 'inherit'
+                  }}
                 >
                   <Calendar size={14} />
-                  {t('date')} {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  {t('results.date')} {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </th>
                 <th 
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -135,18 +168,44 @@ export function ResultsHistory({ results, onClearResults }: ResultsHistoryProps)
                 <th 
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                   onClick={() => handleSort('accuracy')}
+                  style={{
+                    fontFamily: language === 'my'
+                      ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                      : 'inherit'
+                  }}
                 >
-                  {t('accuracy')} {sortBy === 'accuracy' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  {t('results.accuracy')} {sortBy === 'accuracy' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  {t('time')}
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  style={{
+                    fontFamily: language === 'my'
+                      ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                      : 'inherit'
+                  }}
+                >
+                  {t('results.time')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  style={{
+                    fontFamily: language === 'my'
+                      ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                      : 'inherit'
+                  }}
+                >
                   <Type size={14} className="inline mr-1" />
-                  {t('textType')}
+                  {t('results.textType')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  {t('errors')}
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  style={{
+                    fontFamily: language === 'my'
+                      ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                      : 'inherit'
+                  }}
+                >
+                  {t('results.errors')}
                 </th>
               </tr>
             </thead>
@@ -176,7 +235,14 @@ export function ResultsHistory({ results, onClearResults }: ResultsHistoryProps)
                     {result.time}s
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                    <span 
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                      style={{
+                        fontFamily: language === 'my'
+                          ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                          : 'inherit'
+                      }}
+                    >
                       {result.textType}
                     </span>
                   </td>
@@ -192,10 +258,10 @@ export function ResultsHistory({ results, onClearResults }: ResultsHistoryProps)
 
       {/* Progress Chart Placeholder */}
       <div className="mt-8 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">{t('progressOverTime')}</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">{t('results.progressOverTime')}</h3>
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          📈 {t('chartVisualization')}<br/>
-          <span className="text-sm">({t('chartDescription')})</span>
+          📈 {t('results.chartVisualization')}<br/>
+          <span className="text-sm">({t('results.chartDescription')})</span>
         </div>
       </div>
     </div>

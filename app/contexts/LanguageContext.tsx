@@ -31,7 +31,34 @@ const translations = {
       time: 'Time',
       errors: 'Errors',
       restart: 'Restart Test',
-      textType: 'Text Type'
+      textType: 'Text Type',
+      timeLeft: 'Time Left',
+      reset: 'Reset',
+      complete: {
+        title: 'Test Complete!',
+        congratulations: 'Congratulations!',
+        newRecord: 'New Personal Best!',
+        tryAgain: 'Try Again'
+      },
+      modes: {
+        normal: 'Normal Mode',
+        timer: 'Timer Mode'
+      },
+      sound: {
+        enabled: 'Sound On',
+        disabled: 'Sound Off'
+      }
+    },
+    textTypes: {
+      'common-words': 'Common Words',
+      'programming': 'Programming',
+      'quotes': 'Quotes',
+      'numbers': 'Numbers',
+      'punctuation': 'Punctuation',
+      'mixed-case': 'Mixed Case',
+      'burmese': 'Burmese',
+      'burmese-quotes': 'Burmese Quotes',
+      'long-text': 'Long Text'
     },
     results: {
       title: 'Typing Test Results',
@@ -45,12 +72,24 @@ const translations = {
       date: 'Date',
       textType: 'Text Type',
       progressChart: 'Progress Chart',
-      progressDesc: 'Track your typing speed improvement over time'
+      progressDesc: 'Track your typing speed improvement over time',
+      progressOverTime: 'Progress Over Time',
+      chartVisualization: 'Chart Visualization',
+      chartDescription: 'Chart Description',
+      noResultsDescription: 'Complete some typing tests to see your progress here!',
+      averageWpm: 'Average WPM',
+      averageAccuracy: 'Average Accuracy',
+      errors: 'Errors',
+      wpm: 'WPM',
+      accuracy: 'Accuracy',
+      time: 'Time'
     },
     common: {
       start: 'Start',
       restart: 'Restart',
-      finish: 'Finish'
+      finish: 'Finish',
+      generateNewText: 'Generate New Text',
+      developedBy: 'Developed by'
     }
   },
   my: {
@@ -75,7 +114,34 @@ const translations = {
       time: 'အချိန်',
       errors: 'အမှားများ',
       restart: 'ပြန်စတင်',
-      textType: 'စာသားအမျိုးအစား'
+      textType: 'စာသားအမျိုးအစား',
+      timeLeft: 'ကျန်ရှိသောအချိန်',
+      reset: 'ပြန်လည်သတ်မှတ်',
+      complete: {
+        title: 'စမ်းသပ်မှုပြီးဆုံးပါပြီ!',
+        congratulations: 'ဂုဏ်ယူပါသည်!',
+        newRecord: 'ကိုယ်ပိုင်စံချိန်အသစ်!',
+        tryAgain: 'ထပ်စမ်းကြည့်ပါ'
+      },
+      modes: {
+        normal: 'ပုံမှန်စနစ်',
+        timer: 'အချိန်သတ်မှတ်စနစ်'
+      },
+      sound: {
+        enabled: 'အသံဖွင့်',
+        disabled: 'အသံပိတ်'
+      }
+    },
+    textTypes: {
+      'common-words': 'အသုံးများသောစကားလုံးများ',
+      'programming': 'ပရိုဂရမ်မင်း',
+      'quotes': 'ကိုးကားချက်များ',
+      'numbers': 'ဂဏန်းများ',
+      'punctuation': 'ပုဒ်ဖြတ်ပုဒ်ရပ်များ',
+      'mixed-case': 'ရောနှောအက္ခရာများ',
+      'burmese': 'မြန်မာစကားလုံးများ',
+      'burmese-quotes': 'မြန်မာကိုးကားချက်များ',
+      'long-text': 'ရှည်လျားသောစာသား'
     },
     results: {
       title: 'ရိုက်နှိပ်မှုစမ်းသပ်ရလဒ်များ',
@@ -89,12 +155,24 @@ const translations = {
       date: 'ရက်စွဲ',
       textType: 'စာသားအမျိုးအစား',
       progressChart: 'တိုးတက်မှုဇယား',
-      progressDesc: 'အချိန်ကြာလာသည်နှင့်အမျှ သင့်ရိုက်နှိပ်မှုအမြန်နှုန်းတိုးတက်မှုကို ခြေရာခံပါ'
+      progressDesc: 'အချိန်ကြာလာသည်နှင့်အမျှ သင့်ရိုက်နှိပ်မှုအမြန်နှုန်းတိုးတက်မှုကို ခြေရာခံပါ',
+      progressOverTime: 'အချိန်ကြာလာသည်နှင့်အမျှ တိုးတက်မှု',
+      chartVisualization: 'ဇယားမြင်ကွင်း',
+      chartDescription: 'ဇယားဖော်ပြချက်',
+      noResultsDescription: 'သင့်တိုးတက်မှုကိုကြည့်ရှုရန် ရိုက်နှိပ်မှုစမ်းသပ်မှုများပြုလုပ်ပါ!',
+      averageWpm: 'ပျမ်းမျှ မိနစ်လျှင်စာလုံး',
+      averageAccuracy: 'ပျမ်းမျှတိကျမှု',
+      errors: 'အမှားများ',
+      wpm: 'မိနစ်လျှင်စာလုံး',
+      accuracy: 'တိကျမှု',
+      time: 'အချိန်'
     },
     common: {
       start: 'စတင်',
       restart: 'ပြန်စတင်',
-      finish: 'ပြီးဆုံး'
+      finish: 'ပြီးဆုံး',
+      generateNewText: 'စာသားအသစ်ထုတ်လုပ်ရန်',
+      developedBy: 'ဖန်တီးသူ'
     }
   }
 };

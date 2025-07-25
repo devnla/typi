@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { RotateCcw, Zap, Target, Clock, Timer } from 'lucide-react';
+import { RotateCcw, Zap, Target, Clock, Timer, Volume2, VolumeX } from 'lucide-react';
 
 interface TypingTestProps {
   text: string;
@@ -17,58 +17,64 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
   const [isComplete, setIsComplete] = useState(false);
   const [errors, setErrors] = useState(0);
   const [testMode, setTestMode] = useState<TestMode>('normal');
-  const [timerDuration, setTimerDuration] = useState<TimerDuration>(60);
-  const [timeLeft, setTimeLeft] = useState<number>(60);
+  const [timerDuration, setTimerDuration] = useState<TimerDuration>(15);
+  const [timeLeft, setTimeLeft] = useState<number>(15);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const textContainerRef = useRef<HTMLDivElement>(null);
+  const currentCharRef = useRef<HTMLSpanElement>(null);
   const { t } = useLanguage();
 
   const words = text.split(' ');
   const totalChars = text.length;
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  // Sound effects
+  const playSound = useCallback((type: 'correct' | 'error' | 'complete') => {
+    if (!soundEnabled) return;
     
-    if (!startTime) {
-      setStartTime(Date.now());
-      if (testMode === 'timer') {
-        startTimer();
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Resume audio context if suspended
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
       }
-    }
-
-    setUserInput(value);
-    
-    // Count errors
-    let errorCount = 0;
-    for (let i = 0; i < value.length; i++) {
-      if (value[i] !== text[i]) {
-        errorCount++;
+      
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      switch (type) {
+        case 'correct':
+          oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          break;
+        case 'error':
+          oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+          break;
+        case 'complete':
+          oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+          oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1);
+          oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.2);
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+          break;
       }
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + (type === 'complete' ? 0.4 : type === 'error' ? 0.2 : 0.1));
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
     }
-    setErrors(errorCount);
-    setCurrentIndex(value.length);
+  }, [soundEnabled]);
 
-    // Check if test is complete (only in normal mode)
-    if (testMode === 'normal' && value.length === text.length) {
-      completeTest(value, errorCount);
-    }
-  }, [text, startTime, totalChars, onComplete, testMode]);
-
-  const startTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          completeTest(userInput, errors);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const completeTest = (finalInput: string, finalErrors: number) => {
+  const completeTest = useCallback((finalInput: string, finalErrors: number) => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -85,13 +91,85 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
       : 100;
     
     setIsComplete(true);
+    playSound('complete');
     const testTime = testMode === 'timer' 
       ? timerDuration - timeLeft
       : Math.round((endTime - (startTime || endTime)) / 1000);
     onComplete(wpm, accuracy, testTime);
-  };
+  }, [testMode, timerDuration, timeLeft, startTime, onComplete, playSound]);
 
-  const resetTest = () => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    if (!startTime) {
+      setStartTime(Date.now());
+      if (testMode === 'timer') {
+        startTimer();
+      }
+    }
+
+    // Play sound for typing
+    if (value.length > userInput.length) {
+      const newChar = value[value.length - 1];
+      const expectedChar = text[value.length - 1];
+      playSound(newChar === expectedChar ? 'correct' : 'error');
+    }
+
+    setUserInput(value);
+    
+    // Count errors
+    let errorCount = 0;
+    for (let i = 0; i < value.length; i++) {
+      if (value[i] !== text[i]) {
+        errorCount++;
+      }
+    }
+    setErrors(errorCount);
+    setCurrentIndex(value.length);
+
+    // Auto-scroll to keep current character in view
+    setTimeout(() => {
+      if (currentCharRef.current && textContainerRef.current) {
+        const charRect = currentCharRef.current.getBoundingClientRect();
+        const containerRect = textContainerRef.current.getBoundingClientRect();
+        
+        // Check if character is outside the visible area
+        const isAbove = charRect.top < containerRect.top + 100;
+        const isBelow = charRect.bottom > containerRect.bottom - 100;
+        
+        if (isAbove || isBelow) {
+          currentCharRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+        }
+      }
+    }, 0);
+
+    // Check if test is complete (only in normal mode) - use setTimeout to avoid state update during render
+    if (testMode === 'normal' && value.length === text.length) {
+      setTimeout(() => completeTest(value, errorCount), 0);
+    }
+  }, [text, startTime, testMode, userInput.length, playSound, completeTest]);
+
+  const startTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          setTimeout(() => completeTest(userInput, errors), 0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [completeTest, userInput, errors]);
+
+
+
+  const resetTest = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -103,21 +181,36 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
     setErrors(0);
     setTimeLeft(timerDuration);
     inputRef.current?.focus();
-  };
+  }, [timerDuration]);
 
-  const switchTestMode = (mode: TestMode) => {
+  const switchTestMode = useCallback((mode: TestMode) => {
     setTestMode(mode);
     if (mode === 'timer') {
       setTimeLeft(timerDuration);
     }
     resetTest();
-  };
+  }, [timerDuration, resetTest]);
 
-  const changeDuration = (duration: TimerDuration) => {
+  const changeDuration = useCallback((duration: TimerDuration) => {
     setTimerDuration(duration);
     setTimeLeft(duration);
     resetTest();
-  };
+  }, [resetTest]);
+
+  // Load sound setting from localStorage
+  useEffect(() => {
+    const savedSoundSetting = localStorage.getItem('typi-sound-enabled');
+    if (savedSoundSetting !== null) {
+      setSoundEnabled(JSON.parse(savedSoundSetting));
+    }
+  }, []);
+
+  // Save sound setting to localStorage
+  const toggleSound = useCallback(() => {
+    const newSoundEnabled = !soundEnabled;
+    setSoundEnabled(newSoundEnabled);
+    localStorage.setItem('typi-sound-enabled', JSON.stringify(newSoundEnabled));
+  }, [soundEnabled]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -144,49 +237,48 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
   const renderText = () => {
     const isBurmese = /[\u1000-\u109F\u1040-\u1049\uAA60-\uAA7F]/.test(text);
     
-    return text.split('').map((char, index) => {
-      let className = 'text-gray-400 dark:text-gray-500';
-      let extraClasses = 'char';
-      
-      if (index < userInput.length) {
-        if (userInput[index] === char) {
-          className = 'text-gray-800 dark:text-gray-200';
-          extraClasses += ' transition-colors duration-150';
-        } else {
-          className = 'text-red-500 dark:text-red-400 bg-red-500/20 dark:bg-red-400/20';
-          extraClasses += ' transition-colors duration-150 rounded-sm';
-        }
-      } else if (index === currentIndex) {
-        className = 'text-gray-800 dark:text-gray-200 bg-yellow-400/60 dark:bg-yellow-500/40';
-        extraClasses += ' animate-pulse rounded-sm';
-      }
-      
-      // Add word boundary class for better spacing
-      if (char === ' ' && isBurmese) {
-        extraClasses += ' word-boundary';
-      }
-      
-      return (
-        <span 
-          key={index} 
-          className={`${className} ${extraClasses} inline-block relative ${isBurmese ? 'burmese-text' : ''}`}
-          style={{ 
-            fontFamily: isBurmese 
-              ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
-              : '"JetBrains Mono", "Fira Code", "SF Mono", "Monaco", monospace',
-            textRendering: 'optimizeLegibility',
-            fontFeatureSettings: '"liga" 1, "calt" 1, "kern" 1, "clig" 1',
-            fontVariantLigatures: 'common-ligatures contextual discretionary-ligatures',
-            wordBreak: 'keep-all',
-            overflowWrap: 'normal',
-            unicodeBidi: 'normal',
-            direction: 'ltr'
-          }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </span>
-      );
-    });
+    // Render text as a continuous paragraph
+    return (
+      <div className="font-mono text-left leading-loose transition-all duration-300 ease-out">
+        <p className="mb-0">
+          {text.split('').map((char, charIdx) => {
+            let className = 'text-gray-400 dark:text-gray-500';
+            let extraClasses = 'char transition-all duration-200 ease-out';
+            
+            if (charIdx < userInput.length) {
+              if (userInput[charIdx] === char) {
+                className = 'text-gray-800 dark:text-gray-200';
+                extraClasses += ' scale-105 transform';
+              } else {
+                className = 'text-red-500 dark:text-red-400 bg-red-500/30 dark:bg-red-400/30';
+                extraClasses += ' rounded-sm animate-shake';
+              }
+            } else if (charIdx === currentIndex) {
+              className = 'text-gray-800 dark:text-gray-200';
+              extraClasses += ' typing-cursor cursor-blink rounded-sm shadow-lg scale-110 transform';
+            }
+            
+            return (
+              <span 
+                key={charIdx}
+                ref={charIdx === currentIndex ? currentCharRef : null}
+                className={`${className} ${extraClasses} inline-block relative ${isBurmese ? 'burmese-text' : ''}`}
+                style={{ 
+                  fontFamily: isBurmese 
+                    ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
+                    : '"JetBrains Mono", "Fira Code", "SF Mono", "Monaco", monospace',
+                  textRendering: 'optimizeLegibility',
+                  fontFeatureSettings: '"liga" 1, "calt" 1, "kern" 1, "clig" 1',
+                  fontVariantLigatures: 'common-ligatures contextual discretionary-ligatures'
+                }}
+              >
+                {char === ' ' ? '\u00A0' : char}
+              </span>
+            );
+          })}
+        </p>
+      </div>
+    );
   };
 
   const currentWpm = startTime ? Math.round((userInput.split(' ').length / ((Date.now() - startTime) / 60000)) || 0) : 0;
@@ -194,9 +286,9 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
   const displayTime = testMode === 'timer' ? timeLeft : (startTime ? Math.round((Date.now() - startTime) / 1000) : 0);
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 overflow-hidden">
+    <div className="w-full h-full flex flex-col overflow-hidden p-4">
       {/* Test Mode Controls */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex gap-2">
             <button
@@ -207,7 +299,7 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
-              Normal
+              {t('test.modes.normal')}
             </button>
             <button
               onClick={() => switchTestMode('timer')}
@@ -218,7 +310,18 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
               }`}
             >
               <Timer className="w-4 h-4 inline mr-1" />
-              Timer
+              {t('test.modes.timer')}
+            </button>
+            {/* Sound Toggle */}
+            <button
+              onClick={toggleSound}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              title={soundEnabled ? t('test.sound.enabled') : t('test.sound.disabled')}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              <span className="text-xs hidden sm:inline">
+                {soundEnabled ? t('test.sound.enabled') : t('test.sound.disabled')}
+              </span>
             </button>
           </div>
           
@@ -243,7 +346,7 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
       </div>
 
       {/* Stats Bar */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
           <div className="grid grid-cols-3 sm:flex gap-4 sm:gap-8 w-full sm:w-auto">
             <div className="flex items-center gap-2 min-w-0">
@@ -267,7 +370,7 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
                   {testMode === 'timer' ? `${displayTime}s` : errors}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide truncate">
-                  {testMode === 'timer' ? 'Time Left' : t('test.errors')}
+                  {testMode === 'timer' ? t('test.timeLeft') : t('test.errors')}
                 </div>
               </div>
             </div>
@@ -277,32 +380,31 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-all duration-300 ease-in-out text-sm font-medium text-gray-700 dark:text-gray-300 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md w-full sm:w-auto justify-center sm:justify-start"
           >
             <RotateCcw className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
-            Reset
+            {t('test.reset')}
           </button>
         </div>
       </div>
       
-      {/* Text Display - Monkeytype Style */}
+      {/* Text Display - Paragraph Style with Auto-Scroll */}
       <div 
-        className="mb-6 sm:mb-8 p-8 sm:p-12 lg:p-16 min-h-[200px] flex items-center justify-center cursor-text focus:outline-none transition-all duration-300 ease-in-out"
+        ref={textContainerRef}
+        className="flex-1 typing-text-container cursor-text focus:outline-none transition-all duration-300 ease-out"
         onClick={() => inputRef.current?.focus()}
         tabIndex={0}
       >
         <div 
-          className={`text-2xl sm:text-3xl lg:text-4xl leading-loose text-center max-w-5xl mx-auto ${/[\u1000-\u109F\u1040-\u1049\uAA60-\uAA7F]/.test(text) ? 'burmese-text' : ''}`}
+          className={`text-xl sm:text-2xl lg:text-3xl max-w-4xl mx-auto relative z-0 ${/[\u1000-\u109F\u1040-\u1049\uAA60-\uAA7F]/.test(text) ? 'burmese-text' : ''}`}
           style={{ 
             fontFamily: /[\u1000-\u109F\u1040-\u1049\uAA60-\uAA7F]/.test(text)
               ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
               : '"JetBrains Mono", "Fira Code", "SF Mono", "Monaco", monospace',
-            lineHeight: '1.8',
+            lineHeight: '2.5rem',
             letterSpacing: '0.02em',
             textRendering: 'optimizeLegibility',
             fontFeatureSettings: '"liga" 1, "calt" 1, "kern" 1, "clig" 1',
             fontVariantLigatures: 'common-ligatures contextual discretionary-ligatures',
-            wordBreak: 'keep-all',
-            overflowWrap: 'normal',
-            unicodeBidi: 'normal',
-            direction: 'ltr'
+            minHeight: '12rem',
+            overflow: 'visible'
           }}
         >
           {renderText()}
@@ -323,22 +425,28 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
         spellCheck="false"
       />
       
-      {/* Completion Modal */}
+      {/* Completion Modal - Key Results Only */}
       {isComplete && (
-        <div className="mt-6 sm:mt-8 p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-2 border-green-200 dark:border-green-700 rounded-2xl animate-in slide-in-from-bottom-4 duration-500 ease-out">
-          <h3 className="text-xl sm:text-2xl font-bold text-green-800 dark:text-green-300 mb-4 sm:mb-6 text-center animate-in fade-in duration-700 delay-200">{t('test.complete.title')}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-            <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-left duration-500 delay-300">
-              <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 font-mono">{currentWpm}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide mt-1">{t('test.wpm')}</div>
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+          <div className="p-6 lg:p-8 bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/90 dark:to-blue-900/90 border-2 border-green-200 dark:border-green-700 rounded-2xl animate-in slide-in-from-bottom-4 duration-500 ease-out max-w-lg mx-4">
+            <h3 className="text-xl sm:text-2xl font-bold text-green-800 dark:text-green-300 mb-4 sm:mb-6 text-center animate-in fade-in duration-700 delay-200">{t('test.complete.title')}</h3>
+            <div className="grid grid-cols-2 gap-4 sm:gap-6">
+              <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-left duration-500 delay-300">
+                <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 font-mono">{currentWpm}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide mt-1">{t('test.wpm')}</div>
+              </div>
+              <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-right duration-500 delay-400">
+                <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 font-mono">{currentAccuracy}%</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide mt-1">{t('test.accuracy')}</div>
+              </div>
             </div>
-            <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-bottom duration-500 delay-400">
-              <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 font-mono">{currentAccuracy}%</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide mt-1">{t('test.accuracy')}</div>
-            </div>
-            <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-right duration-500 delay-500">
-              <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400 font-mono">{Math.round(((Date.now() - (startTime || Date.now())) / 1000))}s</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide mt-1">{t('test.time')}</div>
+            <div className="mt-4 text-center">
+              <button
+                onClick={resetTest}
+                className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 font-medium"
+              >
+                {t('common.restart')}
+              </button>
             </div>
           </div>
         </div>

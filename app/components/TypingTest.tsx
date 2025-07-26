@@ -26,8 +26,26 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
   const currentCharRef = useRef<HTMLSpanElement>(null);
   const { t } = useLanguage();
 
-  const words = text.split(' ');
+  // Detect if text is Burmese for proper word/character handling
+  const isBurmese = /[\u1000-\u109F\u1040-\u1049\uAA60-\uAA7F]/.test(text);
+  
+  // For Burmese, count syllables/words differently
+  const getWordCount = useCallback((text: string) => {
+    if (isBurmese) {
+      // Burmese syllable boundaries - more accurate for WPM calculation
+      // Count Myanmar syllables by consonant + vowel combinations
+      const burmeseWordPattern = /[\u1000-\u1021][\u1022-\u1027\u1029-\u102A\u102C-\u1032\u1036-\u1039\u103A-\u103F\u1040-\u1049\u104A-\u104F\u1050-\u109F\uAA60-\uAA7F]*|[\u1025\u1026\u1028\u104C\u104D\u104E\u104F]/g;
+      const matches = text.match(burmeseWordPattern);
+      return matches ? matches.length : 1;
+    } else {
+      // English word count
+      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+    }
+  }, [isBurmese]);
+  
+  const words = isBurmese ? text.match(/[\u1000-\u109F\u1040-\u1049\uAA60-\uAA7F\s]+/g) || [] : text.split(' ');
   const totalChars = text.length;
+  const wordCount = getWordCount(text);
 
   // Sound effects
   const playSound = useCallback((type: 'correct' | 'error' | 'complete') => {
@@ -98,10 +116,18 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
     // Convert to minutes for WPM calculation
     const timeInMinutes = timeInSeconds / 60;
     
-    // Calculate WPM using standard formula: (characters typed / 5) / time in minutes
-    // This is the industry standard for typing tests
+    // Calculate WPM based on language
     const charactersTyped = finalInput.length;
-    const wpm = timeInMinutes > 0 ? Math.round((charactersTyped / 5) / timeInMinutes) : 0;
+    let wpm: number;
+    
+    if (isBurmese) {
+      // For Burmese: use actual syllable/word count instead of character/5 formula
+      const typedWordCount = getWordCount(finalInput);
+      wpm = timeInMinutes > 0 ? Math.round(typedWordCount / timeInMinutes) : 0;
+    } else {
+      // For English: use standard formula (characters typed / 5) / time in minutes
+      wpm = timeInMinutes > 0 ? Math.round((charactersTyped / 5) / timeInMinutes) : 0;
+    }
     
     // Calculate accuracy based on correct characters vs total characters typed
     const correctChars = finalInput.length - finalErrors;
@@ -137,13 +163,50 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
 
     setUserInput(value);
     
-    // Count errors
+    // Count errors with proper handling for Burmese text
     let errorCount = 0;
-    for (let i = 0; i < value.length; i++) {
-      if (value[i] !== text[i]) {
-        errorCount++;
+    
+    if (isBurmese) {
+      // For Burmese, compare using grapheme clusters if available
+      if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+        try {
+          const textSegmenter = new Intl.Segmenter('my', { granularity: 'grapheme' });
+          const inputSegmenter = new Intl.Segmenter('my', { granularity: 'grapheme' });
+          
+          const textSegments = Array.from(textSegmenter.segment(text)).map(s => s.segment);
+          const inputSegments = Array.from(inputSegmenter.segment(value)).map(s => s.segment);
+          
+          const minLength = Math.min(textSegments.length, inputSegments.length);
+          for (let i = 0; i < minLength; i++) {
+            if (textSegments[i] !== inputSegments[i]) {
+              errorCount++;
+            }
+          }
+        } catch (error) {
+          // Fallback to character comparison
+          for (let i = 0; i < value.length; i++) {
+            if (value[i] !== text[i]) {
+              errorCount++;
+            }
+          }
+        }
+      } else {
+        // Fallback for older browsers
+        for (let i = 0; i < value.length; i++) {
+          if (value[i] !== text[i]) {
+            errorCount++;
+          }
+        }
+      }
+    } else {
+      // For English, use character-by-character comparison
+      for (let i = 0; i < value.length; i++) {
+        if (value[i] !== text[i]) {
+          errorCount++;
+        }
       }
     }
+    
     setErrors(errorCount);
     setCurrentIndex(value.length);
 
@@ -296,46 +359,91 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
   }, [isComplete]);
 
   const renderText = () => {
-    const isBurmese = /[\u1000-\u109F\u1040-\u1049\uAA60-\uAA7F]/.test(text);
+    // Use the already defined isBurmese variable from component scope
+    
+    // For Burmese text, we need to handle character combinations properly
+     const getTextSegments = () => {
+       if (isBurmese) {
+         // Check if Intl.Segmenter is available (modern browsers)
+         if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+           try {
+             const segmenter = new Intl.Segmenter('my', { granularity: 'grapheme' });
+             const segments = Array.from(segmenter.segment(text));
+             return segments.map(segment => segment.segment);
+           } catch (error) {
+             console.warn('Intl.Segmenter failed, falling back to character split:', error);
+           }
+         }
+         // Fallback for older browsers or if Segmenter fails
+         return text.split('');
+       } else {
+         // For English, split by character as before
+         return text.split('');
+       }
+     };
+    
+    const textSegments = getTextSegments();
+    let currentCharIndex = 0;
     
     // Render text as a continuous paragraph
     return (
       <div className="font-mono text-left leading-loose transition-all duration-300 ease-out">
         <p className="mb-0">
-          {text.split('').map((char, charIdx) => {
+          {textSegments.map((segment, segmentIdx) => {
+            const segmentLength = segment.length;
+            const segmentStart = currentCharIndex;
+            const segmentEnd = currentCharIndex + segmentLength;
+            
             let className = 'text-gray-400 dark:text-gray-500';
             let extraClasses = 'char transition-all duration-200 ease-out';
             
-            if (charIdx < userInput.length) {
-              if (userInput[charIdx] === char) {
+            // Check if this segment has been typed
+            if (segmentEnd <= userInput.length) {
+              // Check if segment matches what was typed
+              const typedSegment = userInput.slice(segmentStart, segmentEnd);
+              if (typedSegment === segment) {
                 className = 'text-gray-800 dark:text-gray-200';
                 extraClasses += ' scale-105 transform';
               } else {
                 className = 'text-red-500 dark:text-red-400 bg-red-500/30 dark:bg-red-400/30';
                 extraClasses += ' rounded-sm animate-shake';
               }
-            } else if (charIdx === currentIndex) {
+            } else if (segmentStart === userInput.length) {
+              // This is the current segment to type
               className = 'text-gray-800 dark:text-gray-200';
               extraClasses += ' typing-cursor cursor-blink rounded-sm shadow-lg scale-110 transform';
             }
             
-            return (
+            // Check if this segment contains Burmese combining characters
+            const isCombiningChar = isBurmese && /[\u102B-\u103E\u1056-\u1059\u105E-\u1060\u1062-\u1064\u1067-\u106D\u1071-\u1074\u1082-\u108D\u108F\u109A-\u109D]/.test(segment);
+            
+            const result = (
               <span 
-                key={charIdx}
-                ref={charIdx === currentIndex ? currentCharRef : null}
-                className={`${className} ${extraClasses} inline-block relative ${isBurmese ? 'burmese-text' : ''}`}
+                key={segmentIdx}
+                ref={segmentStart === userInput.length ? currentCharRef : null}
+                className={`${className} ${extraClasses} inline-block relative ${isBurmese ? 'burmese-text' : ''} char`}
+                data-combining={isCombiningChar ? 'true' : 'false'}
                 style={{ 
                   fontFamily: isBurmese 
                     ? '"Noto Sans Myanmar", "Padauk", "Myanmar Text", "Pyidaungsu", "Myanmar3", "Zawgyi-One", system-ui, sans-serif'
                     : '"JetBrains Mono", "Fira Code", "SF Mono", "Monaco", monospace',
                   textRendering: 'optimizeLegibility',
-                  fontFeatureSettings: '"liga" 1, "calt" 1, "kern" 1, "clig" 1',
-                  fontVariantLigatures: 'common-ligatures contextual discretionary-ligatures'
+                  fontFeatureSettings: isBurmese 
+                    ? '"liga" 1, "calt" 1, "kern" 1, "clig" 1, "ccmp" 1, "mark" 1, "mkmk" 1'
+                    : '"liga" 1, "calt" 1, "kern" 1, "clig" 1',
+                  fontVariantLigatures: 'common-ligatures contextual discretionary-ligatures',
+                  minWidth: isBurmese && segment !== ' ' ? (isCombiningChar ? '0.2em' : '0.5em') : 'auto',
+                  marginRight: isBurmese && isCombiningChar ? '0' : 'auto',
+                  position: 'relative',
+                  zIndex: isCombiningChar ? 2 : 1
                 }}
               >
-                {char === ' ' ? '\u00A0' : char}
+                {segment === ' ' ? '\u00A0' : segment}
               </span>
             );
+            
+            currentCharIndex = segmentEnd;
+            return result;
           })}
         </p>
       </div>
@@ -345,8 +453,16 @@ export function TypingTest({ text, onComplete }: TypingTestProps) {
   const currentWpm = startTime && userInput.length > 0 ? (() => {
     const timeElapsed = (Date.now() - startTime) / 60000; // time in minutes
     if (timeElapsed < 0.01) return 0; // Prevent infinity for very short durations
-    const charactersTyped = userInput.length;
-    return Math.round((charactersTyped / 5) / timeElapsed) || 0;
+    
+    if (isBurmese) {
+      // For Burmese: calculate based on syllables/words typed
+      const typedWordCount = getWordCount(userInput);
+      return Math.round(typedWordCount / timeElapsed) || 0;
+    } else {
+      // For English: use standard character/5 formula
+      const charactersTyped = userInput.length;
+      return Math.round((charactersTyped / 5) / timeElapsed) || 0;
+    }
   })() : 0;
   const currentAccuracy = userInput.length > 0 ? Math.round(((userInput.length - errors) / userInput.length) * 100) : 100;
   const displayTime = testMode === 'timer' ? timeLeft : (startTime ? Math.round((Date.now() - startTime) / 1000) : 0);

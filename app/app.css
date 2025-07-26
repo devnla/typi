@@ -145,7 +145,7 @@ body {
 
 /* Enhanced Burmese text rendering */
 .burmese-text {
-  font-feature-settings: "liga" 1, "calt" 1, "kern" 1, "clig" 1;
+  font-feature-settings: "liga" 1, "calt" 1, "kern" 1, "clig" 1, "ccmp" 1, "mark" 1, "mkmk" 1;
   font-variant-ligatures: common-ligatures contextual discretionary-ligatures;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -154,20 +154,31 @@ body {
   overflow-wrap: normal;
   unicode-bidi: normal;
   direction: ltr;
-  line-height: 1.6;
-  letter-spacing: 0.01em;
+  line-height: 1.8;
+  letter-spacing: 0;
+  font-variant-numeric: normal;
+  font-variant-east-asian: normal;
 }
 
-/* Improved Burmese character spacing */
+/* Enhanced Burmese character spacing and rendering */
 .burmese-text .char {
   display: inline-block;
   position: relative;
-  min-width: 0.1em;
+  min-width: 0.3em;
+  /* Better spacing for Burmese characters */
+  margin-right: 0.02em;
+  /* Prevent character breaking */
+  white-space: nowrap;
+  /* Better vertical alignment */
+  vertical-align: baseline;
+  /* Better handling of combining characters */
+  unicode-bidi: normal;
+  text-align: left;
 }
 
-/* Better Burmese word boundaries */
+/* Improved Burmese word boundaries */
 .burmese-text .word-boundary {
-  margin-right: 0.3em;
+  margin-right: 0.4em;
 }
 
 /* Enhanced focus and selection for Burmese text */
@@ -185,6 +196,54 @@ body {
 .burmese-text ::-moz-selection {
   background: rgba(59, 130, 246, 0.3);
   color: inherit;
+}
+
+/* Better line height for Burmese text */
+.burmese-text {
+  line-height: 2;
+  /* Improved text rendering for complex scripts */
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga" 1, "calt" 1, "kern" 1, "ccmp" 1, "mark" 1, "mkmk" 1;
+  /* Better font smoothing */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Better handling of diacritics and combining marks */
+  font-variant-position: normal;
+}
+
+/* Specific styling for Burmese combining characters */
+.burmese-text .char[data-combining="true"] {
+  margin-right: 0;
+  position: relative;
+  z-index: 1;
+  /* Better positioning for combining marks like း and ာ */
+  display: inline;
+  vertical-align: baseline;
+}
+
+/* Special handling for common Burmese combining characters */
+.burmese-text .char:has-text("း"),
+.burmese-text .char:has-text("ာ"),
+.burmese-text .char:has-text("ါ"),
+.burmese-text .char:has-text("ေ"),
+.burmese-text .char:has-text("ံ"),
+.burmese-text .char:has-text("့"),
+.burmese-text .char:has-text("း") {
+  margin-right: 0.01em;
+  position: relative;
+  z-index: 2;
+}
+
+/* Improved rendering for Burmese vowel marks */
+.burmese-text span:contains("း"),
+.burmese-text span:contains("ာ"),
+.burmese-text span:contains("ါ"),
+.burmese-text span:contains("ေ"),
+.burmese-text span:contains("ံ"),
+.burmese-text span:contains("့") {
+  position: relative;
+  z-index: 2;
+  margin-right: 0;
 }
 
 /* Blinking cursor animation */
@@ -231,12 +290,12 @@ body {
 
 /* Text container with better overflow handling */
 .typing-text-container {
-  max-height: 60vh;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
   padding: 2rem 1rem;
   position: relative;
+  min-height: 50vh;
 }
 
 /* Fade effect for text overflow */
